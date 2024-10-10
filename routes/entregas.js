@@ -5,7 +5,7 @@ import { getEntregas, getEntregaById, getEntregasAbertas } from '../controllers/
 const router = express.Router();
 
 router.get('/', getEntregas);
-router.get('/abertas', getEntregasAbertas);
+router.get('/abertas/', getEntregasAbertas);
 router.get('/:idEntrega', getEntregaById);
 
 export default router;

@@ -1,18 +1,19 @@
 import sql from 'mssql';
 
 export const getEntregas = (req, res) => {
-	const { dateStart, dateEnd, key } = req.query;
+	const { dateStart, dateEnd, chave } = req.query;
 
 	let query = `
 	SELECT C.ID
 		,C.DATA_ENTREGA
 		,C.DATA_DEVOLUCAO
-		,C.ID_CHAVE
+		,C.ID_CHAVE + ' - ' + CHAVE.DESCRIÇÃO ID_CHAVE
 		,SRA.RA_MAT + ' - ' + SRA.RA_NOME FUNCIONARIO
 		,P.PORTEIRO
 	FROM RKF_CHAVES_CONTROLE C
 	LEFT JOIN FOLHA12..SRA010 SRA ON (RA_MAT = MATRICULA AND SRA.D_E_L_E_T_ = '')
 	LEFT JOIN RKF_CHAVES_PORTEIRO P ON (ID_PORTEIRO = P.ID)
+	LEFT JOIN RKF_CHAVES CHAVE ON (LEFT(ID_CHAVE,2) = CHAVE.ARMARIO AND RIGHT(ID_CHAVE,3) = NUMERO)
 	WHERE NOT DATA_DEVOLUCAO IS NULL 
 	`
 
@@ -24,10 +25,9 @@ export const getEntregas = (req, res) => {
 		query += ` AND CAST(DATA_ENTREGA AS DATE) <= '${dateEnd}'`;
 	}
 
-	if (key) {
-		query += `AND ID_CHAVE = '${key}'`;
+	if (chave) {
+		query += ` AND C.ID_CHAVE = '${chave}'`;
 	}
-
 
 	new sql.Request().query(query, (err, result) => {
 		if (err) {
@@ -52,8 +52,12 @@ export const getEntregasAbertas = (req, res) => {
 	FROM RKF_CHAVES_CONTROLE C
 	LEFT JOIN FOLHA12..SRA010 SRA ON (RA_MAT = MATRICULA AND SRA.D_E_L_E_T_ = '')
 	LEFT JOIN RKF_CHAVES_PORTEIRO P ON (ID_PORTEIRO = P.ID)
-	WHERE DATA_DEVOLUCAO IS NULL AND CAST(DATA_ENTREGA AS DATE) >= '${dateStart}'
+	WHERE DATA_DEVOLUCAO IS NULL 
 	`
+
+	if (dateStart) {
+		query += ` AND CAST(DATA_ENTREGA AS DATE) >= '${dateStart}'`;
+	}
 
 	if (dateEnd) {
 		query += ` AND CAST(DATA_ENTREGA AS DATE) <= '${dateEnd}'`;
@@ -62,7 +66,6 @@ export const getEntregasAbertas = (req, res) => {
 	if (key) {
 		query += `AND ID_CHAVE = '${key}'`;
 	}
-
 
 	new sql.Request().query(query, (err, result) => {
 		if (err) {

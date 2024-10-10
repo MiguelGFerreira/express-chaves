@@ -6,7 +6,7 @@ const router = express.Router();
 
 router.get('/', getChaves);
 router.post('/', postChave);
-router.patch('/armario/:armario/numero/:numero', patchChave);
-router.delete('/armario/:armario/numero/:numero', deleteChave);
+router.patch('/:idchave', patchChave);
+router.delete('/:idchave', deleteChave);
 
 export default router;

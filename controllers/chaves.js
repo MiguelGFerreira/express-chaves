@@ -37,33 +37,35 @@ export const postChave = (req, res) => {
 }
 
 export const patchChave = (req, res) => {
-	const { restrito, descricao } = req.query;
+	const { idchave } = req.query;
 
 	let query = 'UPDATE RKF_CHAVES SET'
 
-	if (restrito) {
-		query += ` RESTRITO = '${restrito}'`
+	if (req.params.restrito) {
+		query += ` RESTRITO = '${req.params.restrito}'`
 	}
 
-	if (descricao) {
-		query += ` DESCRIÇÃO = '${descricao}'`
+	if (req.params.descricao) {
+		query += ` DESCRIÇÃO = '${req.params.descricao}'`
 	}
 
-	query += ` WHERE ARMARIO = ${req.params.armario} AND NUMERO = ${req.params.numero}`
+	query += ` WHERE ARMARIO + NUMERO = '${idchave}'`
+
+	console.log(query);
 
 
-	new sql.Request().query(query, (err, result) => {
-		if (err) {
-			console.error("Error executing query:", err);
-		} else {
-			res.send(result.recordset); // Send query result as response
-		}
-	});
+	// new sql.Request().query(query, (err, result) => {
+	// 	if (err) {
+	// 		console.error("Error executing query:", err);
+	// 	} else {
+	// 		res.send(result.recordset); // Send query result as response
+	// 	}
+	// });
 }
 
 export const deleteChave = (req, res) => {
 
-	let query = `DELETE FROM RKF_CHAVES WHERE ARMARIO = ${req.params.armario} AND NUMERO = ${req.params.numero}`
+	let query = `DELETE FROM RKF_CHAVES WHERE ARMARIO + NUMERO = '${req.params.armario + req.params.numero}'`
 
 
 	new sql.Request().query(query, (err, result) => {
