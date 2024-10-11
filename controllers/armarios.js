@@ -24,15 +24,43 @@ export const getArmariosDet = (req, res) => {
 	});
 }
 
+export const getMovimentacoes = (req, res) => {
+
+	let query = `
+	SELECT M.ID
+		,A.Numero
+		,A.Genero
+		,M.Matricula
+		,TRIM(SRA.RA_NOME) Nome
+		,DataMovimentacao
+		,TipoMovimentacao
+	FROM RKF_ARMARIOS_MOVIMENTACOES M
+	INNER JOIN RKF_ARMARIOS A ON M.IDArmario = A.ID
+	LEFT JOIN FOLHA12..SRA010 SRA ON (SRA.RA_MAT = M.Matricula AND SRA.D_E_L_E_T_ = '')
+	`
+
+	new sql.Request().query(query, (err, result) => {
+		if (err) {
+			console.error("Error executing query:", err);
+		} else {
+			res.send(result.recordset); // Send query result as response
+		}
+	});
+
+}
+
 export const patchArmario = (req, res) => {
 	const { dataEntrega, dataDevolucao, nome, matricula, setor, funcao, superior, status } = req.body;
 	let dataField = '';
+	let insertMovimentacao = '';
 
 	if (dataEntrega) {
 		dataField = `DataEntrega = '${dataEntrega}'`
+		insertMovimentacao = `INSERT INTO RKF_ARMARIOS_MOVIMENTACOES VALUES (${req.params.id}, '${matricula}', '${dataEntrega}', 'Empréstimo')`
 	}
 	if (dataDevolucao) {
 		dataField = `DataDevolucao = '${dataDevolucao}'`
+		insertMovimentacao = `INSERT INTO RKF_ARMARIOS_MOVIMENTACOES VALUES (${req.params.id}, '${matricula}', '${dataDevolucao}', 'Devolução')`
 	}
 
 	let query = `
@@ -44,8 +72,12 @@ export const patchArmario = (req, res) => {
 		Funcao = '${funcao}',
 		SuperiorImediato = '${superior}',
 		STATUS = '${status}'
-		WHERE ID = ${req.params.id}
+		WHERE ID = ${req.params.id};
+
+		${insertMovimentacao}
 	`
+
+	console.log(query);
 
 	new sql.Request().query(query, (err, result) => {
 		if (err) {
