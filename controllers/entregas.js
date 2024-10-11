@@ -20,7 +20,7 @@ export const getEntregas = (req, res) => {
 	if (dateStart) {
 		query += ` AND CAST(DATA_ENTREGA AS DATE) >= '${dateStart}'`;
 	}
-	
+
 	if (dateEnd) {
 		query += ` AND CAST(DATA_ENTREGA AS DATE) <= '${dateEnd}'`;
 	}
@@ -112,15 +112,19 @@ export const getEntregaByIdAFunc = (req, res) => {
 	LEFT JOIN RKF_CHAVES_PORTEIRO P ON (ID_PORTEIRO = P.ID)
 	LEFT JOIN RKF_CHAVES CHAVE ON (LEFT(ID_CHAVE,2) = CHAVE.ARMARIO AND RIGHT(ID_CHAVE,3) = NUMERO)
 	OUTER APPLY(SELECT ASSINATURA AS AFUNC FROM RKF_ASSINATURA A WHERE A.ID = ID_ASSINATURA_FUNC) AF
-	OUTER APPLY(SELECT ASSINATURA AS APORT FROM RKF_ASSINATURA A WHERE A.ID = ID_ASSINATURA_PORT) AP
 	WHERE C.ID = ${req.params.idEntrega}
 	`
+
 
 	new sql.Request().query(query, (err, result) => {
 		if (err) {
 			console.error("Error executing query:", err);
 		} else {
-			res.send(result.recordset); // Send query result as response
+
+			res.contentType('image/png');
+			const imageBuffer = result.recordset[0].AFUNC;
+			res.send(imageBuffer); // Send query result as response
+
 		}
 	});
 }
@@ -132,7 +136,6 @@ export const getEntregaByIdAPort = (req, res) => {
 	LEFT JOIN FOLHA12..SRA010 SRA ON (RA_MAT = MATRICULA AND SRA.D_E_L_E_T_ = '')
 	LEFT JOIN RKF_CHAVES_PORTEIRO P ON (ID_PORTEIRO = P.ID)
 	LEFT JOIN RKF_CHAVES CHAVE ON (LEFT(ID_CHAVE,2) = CHAVE.ARMARIO AND RIGHT(ID_CHAVE,3) = NUMERO)
-	OUTER APPLY(SELECT ASSINATURA AS AFUNC FROM RKF_ASSINATURA A WHERE A.ID = ID_ASSINATURA_FUNC) AF
 	OUTER APPLY(SELECT ASSINATURA AS APORT FROM RKF_ASSINATURA A WHERE A.ID = ID_ASSINATURA_PORT) AP
 	WHERE C.ID = ${req.params.idEntrega}
 	`
@@ -141,7 +144,9 @@ export const getEntregaByIdAPort = (req, res) => {
 		if (err) {
 			console.error("Error executing query:", err);
 		} else {
-			res.send(result.recordset); // Send query result as response
+			res.contentType('image/png');
+			const imageBuffer = result.recordset[0].APORT;
+			res.send(imageBuffer); // Send query result as response
 		}
 	});
 }
