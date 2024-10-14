@@ -55,7 +55,7 @@ export const deletePermissao = (req, res) => {
 
 export const postPermissao = (req, res) => {
 	let query = `
-	INSERT INTO RKF_CHAVES_AUTORIZADOS VALUES ('${req.body.matricula}','${req.body.idchave}')
+	INSERT INTO RKF_CHAVES_AUTORIZADOS (MATRICULA, ID_CHAVE) VALUES ('${req.body.matricula}','${req.body.idchave}')
 	`
 	console.log(query);
 	// new sql.Request().query(query, (err, result) => {

@@ -49,6 +49,27 @@ export const getMovimentacoes = (req, res) => {
 
 }
 
+export const getAssinaturaMovimentacao = (req, res) => {
+
+	let query = `
+	SELECT ASS.ASSINATURA
+	FROM RKF_ARMARIOS_MOVIMENTACOES M
+	OUTER APPLY(SELECT ASSINATURA FROM RKF_ASSINATURA A WHERE A.ID = M.IDAssinatura) ASS
+	WHERE M.ID = ${req.params.idMov}
+	`
+
+	new sql.Request().query(query, (err, result) => {
+		if (err) {
+			console.error("Error executing query:", err);
+		} else {
+			res.contentType('image/png');
+			const imageBuffer = result.recordset[0].ASSINATURA;
+			res.send(imageBuffer); // Send query result as response
+		}
+	});
+
+}
+
 export const patchArmario = (req, res) => {
 	const { dataEntrega, dataDevolucao, nome, matricula, setor, funcao, superior, status } = req.body;
 	let dataField = '';
@@ -56,11 +77,11 @@ export const patchArmario = (req, res) => {
 
 	if (dataEntrega) {
 		dataField = `DataEntrega = '${dataEntrega}'`
-		insertMovimentacao = `INSERT INTO RKF_ARMARIOS_MOVIMENTACOES VALUES (${req.params.id}, '${matricula}', '${dataEntrega}', 'Empréstimo')`
+		insertMovimentacao = `INSERT INTO RKF_ARMARIOS_MOVIMENTACOES (IDArmario, Matricula, DataMovimentacao, TipoMovimentacao) VALUES (${req.params.id}, '${matricula}', '${dataEntrega}', 'Empréstimo')`
 	}
 	if (dataDevolucao) {
 		dataField = `DataDevolucao = '${dataDevolucao}'`
-		insertMovimentacao = `INSERT INTO RKF_ARMARIOS_MOVIMENTACOES VALUES (${req.params.id}, '${matricula}', '${dataDevolucao}', 'Devolução')`
+		insertMovimentacao = `INSERT INTO RKF_ARMARIOS_MOVIMENTACOES (IDArmario, Matricula, DataMovimentacao, TipoMovimentacao) VALUES (${req.params.id}, '${matricula}', '${dataDevolucao}', 'Devolução')`
 	}
 
 	let query = `
