@@ -1,7 +1,7 @@
 import sql from 'mssql';
 
 export const getArmarios = (req, res) => {
-	let query = 'SELECT ID, Numero, Genero, Nome, STATUS FROM RKF_ARMARIOS';
+	let query = 'SELECT ID, Numero, Genero, Nome, STATUS, Empresa FROM RKF_ARMARIOS';
 
 	new sql.Request().query(query, (err, result) => {
 		if (err) {
@@ -13,7 +13,10 @@ export const getArmarios = (req, res) => {
 }
 
 export const getArmariosDet = (req, res) => {
-	let query = 'SELECT ID, Numero, Genero, DataEntrega, Nome, Matricula, Setor, Funcao, SuperiorImediato, DataDevolucao, STATUS FROM RKF_ARMARIOS';
+	let query = `
+		SELECT A.ID, A.Numero, A.Genero, A.DataEntrega, A.Nome, A.Matricula, A.Setor, A.Funcao, A.SuperiorImediato, A.DataDevolucao, A.STATUS, A.Empresa
+		FROM RKF_ARMARIOS A
+		`;
 
 	new sql.Request().query(query, (err, result) => {
 		if (err) {
@@ -30,6 +33,7 @@ export const getMovimentacoes = (req, res) => {
 	SELECT M.ID
 		,A.Numero
 		,A.Genero
+		,A.Empresa
 		,M.Matricula
 		,TRIM(SRA.RA_NOME) Nome
 		,DataMovimentacao
@@ -107,4 +111,30 @@ export const patchArmario = (req, res) => {
 			res.send(result.recordset); // Send query result as response
 		}
 	});
+}
+
+export const getAssinaturaArmario = (req, res) => {
+
+	let query = `
+	SELECT A.ASSINATURA
+	FROM RKF_ARMARIOS_MOVIMENTACOES AM
+	INNER JOIN RKF_ASSINATURA A ON AM.IDAssinatura = A.ID
+	WHERE TipoMovimentacao = 'Empréstimo'
+		AND IDArmario = ${req.params.idArmario}
+		AND Matricula = ${req.params.matricula}
+	`
+
+	//query = 'SELECT TOP 1 ASSINATURA FROM RKF_ASSINATURA ORDER BY ID DESC'
+	//console.log(query);
+
+	new sql.Request().query(query, (err, result) => {
+		if (err) {
+			console.error("Error executing query:", err);
+		} else {
+			res.contentType('image/png');
+			const imageBuffer = result.recordset[0].ASSINATURA;
+			res.send(imageBuffer); // Send query result as response
+		}
+	});
+
 }
