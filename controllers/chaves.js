@@ -23,6 +23,25 @@ export const getChaves = (req, res) => {
 	});
 }
 
+export const getChavesByArmario = (req, res) => {
+
+	let query = `
+	SELECT NUMERO
+		,DESCRIÇÃO
+	FROM RKF_CHAVES
+	WHERE ARMARIO = '${req.params.armario}'
+	ORDER BY NUMERO
+	`
+
+	new sql.Request().query(query, (err, result) => {
+		if (err) {
+			console.error("Error executing query:", err);
+		} else {
+			res.send(result.recordset); // Send query result as response
+		}
+	});
+}
+
 export const getChavesRestritas = (req, res) => {
 
 	let query = `

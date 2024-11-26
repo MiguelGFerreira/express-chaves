@@ -6,6 +6,7 @@ import chavesRoutes from './routes/chaves.js';
 import entregasRoutes from './routes/entregas.js';
 import armariosRoutes from './routes/armarios.js';
 import permissaoRoutes from './routes/permissao.js';
+import porteirosRoutes from './routes/porteiros.js';
 
 import sql from 'mssql'
 
@@ -39,5 +40,6 @@ app.use('/chaves', chavesRoutes)
 app.use('/entregas', entregasRoutes)
 app.use('/armarios', armariosRoutes)
 app.use('/permissao', permissaoRoutes)
+app.use('/porteiros', porteirosRoutes)
 
 app.listen(PORT, () => console.log(`Server running on port: ${PORT}`))
