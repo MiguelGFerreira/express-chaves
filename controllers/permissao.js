@@ -20,6 +20,28 @@ export const getPermissao = (req, res) => {
 	});
 }
 
+export const getPermissaoPorChave = (req, res) => {
+
+	let query = `
+	SELECT RIGHT(replicate('0',6) + CAST(SR.MATRICULA AS VARCHAR),6) matricula, TRIM(SR.NOME) nome
+	FROM RKF_CHAVES C
+	INNER JOIN RKF_CHAVES_AUTORIZADOS A ON C.ARMARIO + C.NUMERO = A.ID_CHAVE
+	INNER JOIN FOLHA12..SENIOR_COLABORADOR SR ON RIGHT(replicate('0',6) + CAST(SR.MATRICULA AS VARCHAR),6) = A.MATRICULA
+	WHERE SR.DATA_DEMISSAO = ''
+		AND C.ARMARIO = '${req.params.armario}'
+		AND C.NUMERO = '${req.params.numero}'
+	ORDER BY SR.NOME
+	`
+
+	new sql.Request().query(query, (err, result) => {
+		if (err) {
+			console.error("Error executing query:", err);
+		} else {
+			res.send(result.recordset); // Send query result as response
+		}
+	});
+}
+
 export const getFuncionarios = (req, res) => {
 	let query = `
 		SELECT RIGHT(replicate('0',6) + CAST(MATRICULA AS VARCHAR),6) matricula,

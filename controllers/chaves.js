@@ -28,6 +28,7 @@ export const getChavesByArmario = (req, res) => {
 	let query = `
 	SELECT NUMERO
 		,DESCRIÇÃO
+		,RESTRITO
 	FROM RKF_CHAVES
 	WHERE ARMARIO = '${req.params.armario}'
 	ORDER BY NUMERO
@@ -65,7 +66,7 @@ export const getChavesRestritas = (req, res) => {
 
 export const postChave = (req, res) => {
 	let query = `
-	INSERT INTO RKF_CHAVES (ARMARIO, NUMERO, DESCRIÇÃO, RESTRITO) VALUES ('${req.body.armario}','${req.body.numero}','${req.body.descricao}','${req.body.restrito}')
+	INSERT INTO RKF_CHAVES (ARMARIO, NUMERO, DESCRIÇÃO, RESTRITO) VALUES ('${req.body.armario}','${req.body.numero}','${(req.body.descricao).replace("'","''")}','${req.body.restrito}')
 	`
 
 	new sql.Request().query(query, (err, result) => {

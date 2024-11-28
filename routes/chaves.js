@@ -5,7 +5,7 @@ import { getChaves, getChavesRestritas, postChave, patchChave, deleteChave, getC
 const router = express.Router();
 
 router.get('/', getChaves);
-router.get('/:armario', getChavesByArmario);
+router.get('/armario/:armario', getChavesByArmario);
 router.get('/restritas/', getChavesRestritas);
 router.post('/', postChave);
 router.patch('/:idchave', patchChave);
