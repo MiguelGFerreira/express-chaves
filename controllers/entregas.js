@@ -67,7 +67,7 @@ export const getEntregasAbertas = (req, res) => {
 	}
 
 	if (key) {
-		query += `AND ID_CHAVE = '${key}'`;
+		query += ` AND ID_CHAVE = '${key}'`;
 	}
 
 	new sql.Request().query(query, (err, result) => {
@@ -89,9 +89,17 @@ export const getEntregaById = (req, res) => {
 		,TRIM(SRA.RA_MAT) + ' - ' + TRIM(SRA.RA_NOME) FUNCIONARIO
 		,P.PORTEIRO
 		,C.OBSERVACOES
+		,CASE WHEN LEFT(CAST(AF.AFUNC AS VARCHAR(MAX)),4) = 'data' THEN CAST(AF.AFUNC AS VARCHAR(MAX)) ELSE NULL END AS AFUNC_CAST
+		,CASE WHEN LEFT(CAST(AP.APORT AS VARCHAR(MAX)),4) = 'data' THEN CAST(AP.APORT AS VARCHAR(MAX)) ELSE NULL END AS APORT_CAST
+		,CASE WHEN LEFT(CAST(AFD.AFUNCDEV AS VARCHAR(MAX)),4) = 'data' THEN CAST(AFD.AFUNCDEV AS VARCHAR(MAX)) ELSE NULL END AS AFUNC_DEV_CAST
+		,CASE WHEN LEFT(CAST(APD.APORTDEV AS VARCHAR(MAX)),4) = 'data' THEN CAST(APD.APORTDEV AS VARCHAR(MAX)) ELSE NULL END AS APORT_DEV_CAST
 	FROM RKF_CHAVES_CONTROLE C
 	LEFT JOIN FOLHA12..SRA010 SRA ON (RA_MAT = MATRICULA AND SRA.D_E_L_E_T_ = '')
 	LEFT JOIN RKF_CHAVES_PORTEIRO P ON (ID_PORTEIRO = P.ID)
+	OUTER APPLY (SELECT ASSINATURA AS AFUNC	FROM RKF_ASSINATURA A WHERE A.ID = ID_ASSINATURA_FUNC) AF
+	OUTER APPLY (SELECT ASSINATURA AS APORT	FROM RKF_ASSINATURA A WHERE A.ID = ID_ASSINATURA_PORT) AP
+	OUTER APPLY (SELECT ASSINATURA AS AFUNCDEV FROM RKF_ASSINATURA A WHERE A.ID = ID_ASSINATURA_FUNC_DEV) AFD
+	OUTER APPLY (SELECT ASSINATURA AS APORTDEV FROM RKF_ASSINATURA A WHERE A.ID = ID_ASSINATURA_PORT_DEV) APD
 	WHERE C.ID = ${req.params.idEntrega}
 	`
 
@@ -181,6 +189,85 @@ export const getEntregaByIdAPortDev = (req, res) => {
 			res.contentType('image/png');
 			const imageBuffer = result.recordset[0].APORT_DEV;
 			res.send(imageBuffer); // Send query result as response
+		}
+	});
+}
+
+export const postEntrega = (req, res) => {
+	const query = `
+	DECLARE @id1 INT, @id2 INT;
+
+	-- Insere assinatura do funcionario e captura o ID
+	INSERT INTO RKF_ASSINATURA (ASSINATURA) 
+	VALUES (CAST('${req.body.assinatura_funcionario}' AS VARBINARY(MAX)));
+	SET @id1 = SCOPE_IDENTITY();
+
+	-- Insere a assinatura do porteiro e captura o ID
+	INSERT INTO RKF_ASSINATURA (ASSINATURA) 
+	VALUES (CAST('${req.body.assinatura_porteiro}' AS VARBINARY(MAX)));
+	SET @id2 = SCOPE_IDENTITY();
+
+
+	INSERT INTO RKF_CHAVES_CONTROLE 
+	(
+		ID_CHAVE, 
+		MATRICULA, 
+		DATA_ENTREGA, 
+		OBSERVACOES, 
+		ID_ASSINATURA_FUNC, 
+		ID_ASSINATURA_PORT, 
+		ID_PORTEIRO
+	) 
+	VALUES
+	(
+		'${req.body.id_chave}',
+		'${req.body.matricula}',
+		GETDATE(),
+		'${req.body.observacao}',
+		@id1,             -- ID do primeiro insert
+		@id2,             -- ID do segundo insert
+		'${req.body.id_porteiro}'
+	);
+	`
+
+	//console.log(query);
+	new sql.Request().query(query, (err, result) => {
+		if (err) {
+			console.error("Error executing query:", err);
+		} else {
+			res.send(result.recordset); // Send query result as response
+		}
+	});
+}
+
+export const devolveEntrega = (req, res) => {
+	// update usando patch para devolver a chave
+	const query = `
+	DECLARE @id1 INT, @id2 INT;
+
+	-- Insere assinatura do funcionario e captura o ID
+	INSERT INTO RKF_ASSINATURA (ASSINATURA) 
+	VALUES (CAST('${req.body.assinatura_funcionario}' AS VARBINARY(MAX)));
+	SET @id1 = SCOPE_IDENTITY();
+
+	-- Insere a assinatura do porteiro e captura o ID
+	INSERT INTO RKF_ASSINATURA (ASSINATURA) 
+	VALUES (CAST('${req.body.assinatura_porteiro}' AS VARBINARY(MAX)));
+	SET @id2 = SCOPE_IDENTITY();
+
+	UPDATE RKF_CHAVES_CONTROLE SET
+		DATA_DEVOLUCAO = GETDATE()
+		,ID_ASSINATURA_FUNC_DEV = @id1
+		,ID_ASSINATURA_PORT_DEV = @id2
+	WHERE ID = ${req.params.idEntrega}
+	`
+
+	console.log(query);
+	new sql.Request().query(query, (err, result) => {
+		if (err) {
+			console.error("Error executing query:", err);
+		} else {
+			res.send(result.recordset); // Send query result as response
 		}
 	});
 }

@@ -27,7 +27,7 @@ export const getChavesByArmario = (req, res) => {
 
 	let query = `
 	SELECT NUMERO
-		,DESCRIÇÃO
+		,NUMERO + ' - ' + DESCRIÇÃO AS DESCRIÇÃO
 		,RESTRITO
 	FROM RKF_CHAVES
 	WHERE ARMARIO = '${req.params.armario}'

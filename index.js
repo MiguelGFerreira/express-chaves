@@ -34,6 +34,10 @@ sql.connect(config, err => {
 console.log('test');
 
 app.use(bodyParser.json());
+app.use(bodyParser.urlencoded({
+  limit: '50mb',
+  extended: true
+}))
 app.use(cors())
 
 app.use('/chaves', chavesRoutes)
