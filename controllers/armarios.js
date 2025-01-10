@@ -58,7 +58,8 @@ export const getMovimentacoes = (req, res) => {
 		,TipoMovimentacao
 	FROM RKF_ARMARIOS_MOVIMENTACOES M
 	INNER JOIN RKF_ARMARIOS A ON M.IDArmario = A.ID
-	LEFT JOIN FOLHA12..SRA010 SRA ON (SRA.RA_MAT = M.Matricula AND SRA.D_E_L_E_T_ = '')
+	LEFT JOIN FOLHA12..SENIOR_COLABORADOR SR ON RIGHT(replicate('0',6) + CAST(SR.MATRICULA AS VARCHAR),6) = M.Matricula
+	ORDER BY ID DESC
 	`
 
 	new sql.Request().query(query, (err, result) => {
@@ -160,15 +161,15 @@ export const getAssinaturaArmario = (req, res) => {
 export const getEmprestimosSemAssinatura = (req, res) => {
 
 	let query = `
-	SELECT A.Numero + ' - ' + C.NOME Armario
+	SELECT A.Numero + ' - ' + SR.NOME Armario
 		,AM.ID
 	FROM RKF_ARMARIOS_MOVIMENTACOES AM
-	LEFT JOIN FOLHA12..SENIOR_COLABORADOR C ON AM.Matricula = C.MATRICULA
 	LEFT JOIN RKF_ARMARIOS A ON AM.IDArmario = A.ID
+	LEFT JOIN FOLHA12..SENIOR_COLABORADOR SR ON RIGHT(replicate('0',6) + CAST(SR.MATRICULA AS VARCHAR),6) = A.Matricula
 	WHERE IDAssinatura IS NULL
 		AND AM.TipoMovimentacao = 'Empréstimo'
-		AND C.NOME IS NOT NULL
-	ORDER BY C.NOME
+		AND SR.NOME IS NOT NULL
+	ORDER BY SR.NOME
 	`
 
 	new sql.Request().query(query, (err, result) => {
@@ -251,6 +252,32 @@ export const postMovimentacaoSegundaVia = (req, res) => {
 export const getSegundaViaEmAberto = (req, res) => {
 
 	let query = "SELECT ID, Numero, Nome FROM RKF_ARMARIOS WHERE SegundaViaEmprestada = 1"
+
+	new sql.Request().query(query, (err, result) => {
+		if (err) {
+			console.error("Error executing query:", err);
+		} else {
+			res.send(result.recordset); // Send query result as response
+		}
+	});
+
+}
+
+export const getRelatorioSegundaViaEmAberto = (req, res) => {
+
+	let query = `
+	SELECT ARM.Numero
+		,ARM.Nome
+		,ARM.Empresa
+		,MAX(MOV.DataMovimentacao) DataMovimentacao
+		,DATEDIFF(DAY,MOV.DataMovimentacao,GETDATE()) Dias
+	FROM RKF_ARMARIOS_MOVIMENTACOES MOV
+	INNER JOIN RKF_ARMARIOS ARM ON ARM.ID = MOV.IDArmario
+		AND MOV.TipoMovimentacao = 'SEGUNDA VIA'
+	WHERE SegundaViaEmprestada = 1
+	GROUP BY ARM.Numero, ARM.Nome, ARM.Empresa, MOV.DataMovimentacao
+	ORDER BY Dias
+	`
 
 	new sql.Request().query(query, (err, result) => {
 		if (err) {
