@@ -79,16 +79,22 @@ export const postChave = (req, res) => {
 }
 
 export const patchChave = (req, res) => {
-	const { restrito, descricao } = req.body;
+	const { restrito, descricao, usuario } = req.body;
 
 	let query = 'UPDATE RKF_CHAVES SET'
+	let logQuery = `
+		INSERT INTO RKF_CHAVES_LOG (USUARIO, DATAHORA, TABELA, ID_TABELA, TIPO, CAMPO, VALOR_ANTIGO, VALOR_NOVO)
+		VALUES ('${usuario}', GETDATE(), 'RKF_CHAVES', '${req.params.idchave}', 'UPDATE'
+	` // continua na condicional
 
 	if (restrito) {
 		query += ` RESTRITO = '${restrito}'`
+		logQuery += `, 'RESTRITO', 'VALOR ANTIGO', '${restrito}')`
 	}
 
 	if (descricao) {
 		query += ` DESCRIÇÃO = '${descricao}'`
+		logQuery += `, 'DESCRIÇÃO', 'VALOR ANTIGO', '${restrito}')`
 	}
 
 	query += ` WHERE ARMARIO + NUMERO = '${req.params.idchave}'`

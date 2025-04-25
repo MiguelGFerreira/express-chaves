@@ -3,6 +3,7 @@ import cors from 'cors';
 import bodyParser from 'body-parser';
 
 import chavesRoutes from './routes/chaves.js';
+import chavesArmariosRoutes from './routes/chavesArmarios.js';
 import entregasRoutes from './routes/entregas.js';
 import armariosRoutes from './routes/armarios.js';
 import permissaoRoutes from './routes/permissao.js';
@@ -41,6 +42,7 @@ app.use(bodyParser.urlencoded({
 app.use(cors())
 
 app.use('/chaves', chavesRoutes)
+app.use('/chavesArmarios', chavesArmariosRoutes)
 app.use('/entregas', entregasRoutes)
 app.use('/armarios', armariosRoutes)
 app.use('/permissao', permissaoRoutes)
