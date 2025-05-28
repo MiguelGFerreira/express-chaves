@@ -53,7 +53,7 @@ export const getMovimentacoes = (req, res) => {
 		,A.Genero
 		,A.Empresa
 		,M.Matricula
-		,TRIM(SRA.RA_NOME) Nome
+		,TRIM(SR.NOME) Nome
 		,DataMovimentacao
 		,TipoMovimentacao
 	FROM RKF_ARMARIOS_MOVIMENTACOES M
